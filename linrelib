@@ -6611,6 +6611,11 @@ local lrewindowtoggle = false
 local lreconnections = {}
 local lreicon = nil
 
+local MarketplaceService = cloneref(game:GetService("MarketplaceService"))
+
+local gameInfo = MarketplaceService:GetProductInfo(game.PlaceId)
+
+
 function Library:CreateWindow(...)
 	local Arguments = { ... }
 	local WindowInfo = Templates.Window
@@ -6703,7 +6708,16 @@ function Library:CreateWindow(...)
 		ZIndex = 1;
 		Parent = Inner;
 	})
-
+	
+	local GameLabel = Library:CreateLabel({
+		Position = UDim2.new(0, 0, 0, 100);
+		Size = UDim2.new(0, 0, 0, 25);
+		Text = gameInfo.Name; -- replace with game name
+		TextXAlignment = Enum.TextXAlignment.Right;
+		ZIndex = 1;
+		Parent = Inner;
+	})
+	
 	local MainSectionOuter = Library:Create("Frame", {
 		BackgroundColor3 = Library.BackgroundColor;
 		BorderColor3 = Library.OutlineColor;
