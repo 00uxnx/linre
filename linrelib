@@ -69,6 +69,7 @@ local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Global
 ScreenGui.DisplayOrder = 999
 ScreenGui.ResetOnSpawn = false
+ScreenGui.IgnoreGuiInset = true
 ParentUI(ScreenGui)
 
 local ModalElement = Instance.new("TextButton")
@@ -251,7 +252,7 @@ local Library = {
 	-- LinRe --
 	LINREConfiguration = {
 		--- Background
-		LinReBackground = false;
+		LinReBackground = true;
 		LREBGTransparency = 0.5;
 		LinReBGColor = Color3.fromRGB(0, 0, 0);
 
@@ -7969,7 +7970,7 @@ function Library:CreateWindow(...)
 		
 		
 		if Toggled then
-			-- Linre's Toggled Handler
+			-- Background
 			LinreBG = Instance.new("Frame")
 			LinreBG.Name = "lrebg"
 			LinreBG.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -7977,70 +7978,60 @@ function Library:CreateWindow(...)
 			LinreBG.Size = UDim2.fromScale(1, 1)
 			LinreBG.BackgroundColor3 = Library.LINREConfiguration.LinReBGColor
 			LinreBG.BackgroundTransparency = Library.LINREConfiguration.LREBGTransparency
-			LinreBG.ZIndex = -1000
+			LinreBG.ZIndex = 1 -- was -1000, that hid it behind everything
 			LinreBG.Parent = ScreenGui
 
-			-- icon stuff
-			
+			-- Icon needs to live in workspace, not the camera
 			icon = Instance.new("MeshPart")
 			icon.Name = "icon"
 			icon.Color = Library.AccentColor
 			icon.Transparency = 1
 			icon.Material = Enum.Material.Neon
 			icon.Size = Vector3.new(0.001, 0.001, 0.001)
-			icon.Parent = cam
 			icon.Anchored = true
 			icon.CanCollide = false
 			icon.Massless = true
 			icon.Locked = true
 			icon.MeshId = "rbxassetid://98310035274787"
 			icon.DoubleSided = true
-				
-				
+			icon.Parent = workspace -- was cam, MeshParts don't render parented to Camera
+
 			lreconnections.Icon = RunService.RenderStepped:Connect(function()
-				if not Library.LINREConfiguration.LINREIcon then return end
-				lreicon = icon -- only mesh supported right now
+				if not Library.LINREConfiguration.LINREIcon then
+					icon.Transparency = 1
+					return
+				end
 
-				lreicon.Color = Library.AccentColor
-				lreicon.Transparency = Library.LINREConfiguration.LREIconTransparency
+				icon.Color = Library.AccentColor
+				icon.Transparency = Library.LINREConfiguration.LREIconTransparency
 
-				lreicon.Size = Vector3.new(
+				icon.Size = Vector3.new(
 					Library.LINREConfiguration.lreiconsizex,
 					Library.LINREConfiguration.lreiconsizey,
 					Library.LINREConfiguration.LREIconThickness
 				)
-				
-				local offset = Vector3.new(0, 0, -5) -- 2 studs in front of camera
+
+				local offset = Vector3.new(0, 0, -5)
 				local worldPos = cam.CFrame:PointToWorldSpace(offset)
-				lreicon.CFrame = CFrame.new(worldPos)
-				
+
 				LinreBG.BackgroundColor3 = Library.LINREConfiguration.LinReBGColor
 				LinreBG.BackgroundTransparency = Library.LINREConfiguration.LREBGTransparency
-				
-				-- Spinning
+
 				if Library.LINREConfiguration.LREIconSpin then
 					local speed = Library.LINREConfiguration.LREIconSpinSpeed or 1
 					local direction = Library.LINREConfiguration.LREIconSpinReverse and -1 or 1
 					local angle = tick() * speed * direction
 
-					lreicon.CFrame = CFrame.new(worldPos)
-						* CFrame.Angles(0, angle, 0)
+					icon.CFrame = CFrame.new(worldPos) * CFrame.Angles(0, angle, 0)
+				else
+					icon.CFrame = CFrame.new(worldPos)
 				end
 			end)
 
 		else
-			-- Cleanup Linre's stuff when untoggled
-			if icon then
-				icon:Destroy()
-			end
-
-			if LinreBG then
-				LinreBG:Destroy()
-			end
-
-			if lreconnections.Icon then
-				lreconnections.Icon:Disconnect()
-			end
+			if icon then icon:Destroy() end
+			if LinreBG then LinreBG:Destroy() end
+			if lreconnections.Icon then lreconnections.Icon:Disconnect() end
 		end
 		
 		if Toggled then
