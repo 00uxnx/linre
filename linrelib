@@ -1,7 +1,6 @@
 local cloneref = (cloneref or clonereference or function(instance: any)
 	return instance
 end)
-print("ahhh cheekyboy")
 local InputService: UserInputService = cloneref(game:GetService("UserInputService"))
 local TextService: TextService = cloneref(game:GetService("TextService"))
 local CoreGui: CoreGui = cloneref(game:GetService("CoreGui"))
@@ -233,13 +232,13 @@ local Library = {
 
 	-- colors and font --
 	FontColor = Color3.fromRGB(255, 255, 255);
-	MainColor = Color3.fromRGB(28, 28, 28);
-	BackgroundColor = Color3.fromRGB(20, 20, 20);
+	MainColor = Color3.fromRGB(16, 16, 16);
+	BackgroundColor = Color3.fromRGB(23, 23, 23);
 
-	AccentColor = Color3.fromRGB(0, 85, 255);
+	AccentColor = Color3.fromRGB(136, 63, 255);
 	DisabledAccentColor = Color3.fromRGB(142, 142, 142);
 
-	OutlineColor = Color3.fromRGB(50, 50, 50);
+	OutlineColor = Color3.fromRGB(20, 20, 20);
 	DisabledOutlineColor = Color3.fromRGB(70, 70, 70);
 
 	DisabledTextColor = Color3.fromRGB(142, 142, 142);
@@ -253,86 +252,22 @@ local Library = {
 	LINREConfiguration = {
 		--- Background
 		LinReBackground = false;
-		LREBGTransparency = 0.3;
+		LREBGTransparency = 0.5;
 		LinReBGColor = Color3.fromRGB(0, 0, 0);
 
 		LinReIconBackground = true;
-		LREIcon = "Custom"; 
-		LREIconMaterial = Enum.Material.SmoothPlastic;
+		LREIconMaterial = Enum.Material.Neon;
 		LREIconColor = Color3.fromRGB(255, 255, 255);
 		LREIconTransparency = 0;
 		LREIconScale = 1;
 
-		LREIconSpin = false; -- ONLY FOR MESH ICONS
+		LREIconSpin = true; -- ONLY FOR MESH ICONS
 		LREIconSpinSpeed = 1;
 		LREIconSpinReverse = false;
 		LREIconThickness = 0.1;
 		
-		lreiconsizex = 0.5;
-		lreiconsizey = 0.5;
-		
-		LREIcons = {
-			Custom = {
-				Mesh = 0;
-				Texture = 0;
-
-				Image = false;
-				IMG = 0,
-
-				Rotation = { -- only for mesh icons
-					X = 0;
-					Y = 0;
-					Z = 0
-				},
-
-				Size = {
-					X = 0,
-					Y = 0,
-					-- cant edit Z since its thickness of the icon
-				}
-			},
-
-			Cross = {
-				Mesh = 4411430922;
-				Texture = 0;
-
-				Image = false;
-				IMG = 0,
-
-				Rotation = { -- only for mesh icons
-					X = 0;
-					Y = 0;
-					Z = 0
-				},
-
-				Size = {
-					X = 0,
-					Y = 0,
-					-- cant edit Z since its thickness of the icon
-				}
-			},
-
-			Star = {
-				Mesh = 115461711133319;
-				Texture = 0;
-
-				Image = false;
-				IMG = 0,
-
-				Rotation = { -- only for mesh icons
-					X = 0;
-					Y = 0;
-					Z = 0
-				},
-
-				Size = {
-					X = 0,
-					Y = 0,
-					-- cant edit Z since its thickness of the icon
-				}
-			},
-
-		};
+		lreiconsizex = 20;
+		lreiconsizey = 12;
 	};
 	
 	
@@ -6639,7 +6574,7 @@ function Library:CreateWindow(...)
 	end
 
 	if WindowInfo.Size == UDim2.fromOffset(0, 0) then
-		WindowInfo.Size = if Library.IsMobile then UDim2.fromOffset(550, math.clamp(ViewportSize.Y - 35, 200, 600)) else UDim2.fromOffset(550, 600)
+		WindowInfo.Size = if Library.IsMobile then UDim2.fromOffset(741, math.clamp(ViewportSize.Y - 35, 200, 600)) else UDim2.fromOffset(741, 900)
 	end
 
 	Library.NotifySide = WindowInfo.NotifySide
@@ -8033,7 +7968,6 @@ function Library:CreateWindow(...)
 		end
 		
 		
-		--[[-- linre
 		if Toggled then
 			-- Linre's Toggled Handler
 			LinreBG = Instance.new("Frame")
@@ -8047,28 +7981,36 @@ function Library:CreateWindow(...)
 			LinreBG.Parent = ScreenGui
 
 			-- icon stuff
-			if Library.LINREConfiguration.LINREIcon then
-				icon = Instance.new("MeshPart")
-				icon.Name = "icon"
-				icon.Color = Color3.fromRGB(0, 0, 0)
-				icon.Transparency = 1
-				icon.Material = Enum.Material.SmoothPlastic
-				icon.Size = Vector3.new(0.001, 0.001, 0.001)
-				icon.Parent = cam
-			end
-
+			
+			icon = Instance.new("MeshPart")
+			icon.Name = "icon"
+			icon.Color = Library.AccentColor
+			icon.Transparency = 1
+			icon.Material = Enum.Material.Neon
+			icon.Size = Vector3.new(0.001, 0.001, 0.001)
+			icon.Parent = cam
+			icon.Anchored = true
+			icon.CanCollide = false
+			icon.Massless = true
+			icon.Locked = true
+			icon.MeshId = "rbxassetid://98310035274787"
+			icon.DoubleSided = true
+				
+				
 			lreconnections.Icon = RunService.RenderStepped:Connect(function()
 				if not Library.LINREConfiguration.LINREIcon then return end
 				lreicon = icon -- only mesh supported right now
 
-				lreicon.Color = Library.LINREConfiguration.LREIconColor
+				lreicon.Color = Library.AccentColor
+				lreicon.Transparency = Library.LINREConfiguration.LREIconTransparency
+
 				lreicon.Size = Vector3.new(
 					Library.LINREConfiguration.lreiconsizex,
 					Library.LINREConfiguration.lreiconsizey,
 					Library.LINREConfiguration.LREIconThickness
 				)
 				
-				local offset = Vector3.new(0, 0, -2) -- 2 studs in front of camera
+				local offset = Vector3.new(0, 0, -5) -- 2 studs in front of camera
 				local worldPos = cam.CFrame:PointToWorldSpace(offset)
 				lreicon.CFrame = CFrame.new(worldPos)
 				
@@ -8099,7 +8041,7 @@ function Library:CreateWindow(...)
 			if lreconnections.Icon then
 				lreconnections.Icon:Disconnect()
 			end
-		end]]
+		end
 		
 		if Toggled then
 			-- A bit scuffed, but if we're going from not toggled -> toggled we want to show the frame immediately so that the fade is visible.
