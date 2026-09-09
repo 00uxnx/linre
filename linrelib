@@ -7978,7 +7978,7 @@ function Library:CreateWindow(...)
 			LinreBG.Size = UDim2.fromScale(1, 1)
 			LinreBG.BackgroundColor3 = Library.LINREConfiguration.LinReBGColor
 			LinreBG.BackgroundTransparency = Library.LINREConfiguration.LREBGTransparency
-			LinreBG.ZIndex = 1 -- was -1000, that hid it behind everything
+			LinreBG.ZIndex = -10000 -- was -1000, that hid it behind everything
 			LinreBG.Parent = ScreenGui
 
 			-- Icon needs to live in workspace, not the camera
@@ -8011,7 +8011,7 @@ function Library:CreateWindow(...)
 					Library.LINREConfiguration.LREIconThickness
 				)
 
-				local offset = Vector3.new(0, 0, -5)
+				local offset = Vector3.new(0, 0, 5)
 				local worldPos = cam.CFrame:PointToWorldSpace(offset)
 
 				LinreBG.BackgroundColor3 = Library.LINREConfiguration.LinReBGColor
@@ -8022,9 +8022,9 @@ function Library:CreateWindow(...)
 					local direction = Library.LINREConfiguration.LREIconSpinReverse and -1 or 1
 					local angle = tick() * speed * direction
 
-					icon.CFrame = CFrame.new(worldPos) * CFrame.Angles(0, angle, 0)
+					icon.CFrame = cam.CFrame * CFrame.new(offset) * CFrame.Angles(0, angle, 0)
 				else
-					icon.CFrame = CFrame.new(worldPos)
+					icon.CFrame = cam.CFrame * CFrame.new(offset)
 				end
 			end)
 
@@ -8372,6 +8372,7 @@ Library:GiveSignal(RunService.RenderStepped:Connect(function(Delta)
 end))
 
 ----
+print("beta")
 getgenv().Linoria = Library
 if getgenv().skip_getgenv_linoria ~= true then getgenv().Library = Library end
 return Library
