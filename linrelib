@@ -6575,7 +6575,7 @@ function Library:CreateWindow(...)
 	end
 
 	if WindowInfo.Size == UDim2.fromOffset(0, 0) then
-		WindowInfo.Size = if Library.IsMobile then UDim2.fromOffset(741, math.clamp(ViewportSize.Y - 35, 200, 600)) else UDim2.fromOffset(741, 900)
+		WindowInfo.Size = if Library.IsMobile then UDim2.fromOffset(550, math.clamp(ViewportSize.Y - 35, 200, 600)) else UDim2.fromOffset(550, 600)
 	end
 
 	Library.NotifySide = WindowInfo.NotifySide
@@ -6643,15 +6643,6 @@ function Library:CreateWindow(...)
 		Size = UDim2.new(0, 0, 0, 25);
 		Text = WindowInfo.Title or "";
 		TextXAlignment = Enum.TextXAlignment.Left;
-		ZIndex = 1;
-		Parent = Inner;
-	})
-	
-	local GameLabel = Library:CreateLabel({
-		Position = UDim2.new(0, 7, 0, -20);
-		Size = UDim2.new(0, 0, 0, 25);
-		Text = gameInfo.Name; -- replace with game name
-		TextXAlignment = Enum.TextXAlignment.Right;
 		ZIndex = 1;
 		Parent = Inner;
 	})
@@ -7952,9 +7943,12 @@ function Library:CreateWindow(...)
 	local Toggled = false
 	local Fading = false
 	local LinreBG
-	local icon
 	local cam = workspace.CurrentCamera
 	
+local LinreViewport
+local LinreWorldModel
+local LinreIcon
+local LinreCamera
 	function Window:Toggle(Toggling)
 		if typeof(Toggling) == "boolean" and Toggling == Toggled then return end
 		if Fading then return end
@@ -7969,70 +7963,391 @@ function Library:CreateWindow(...)
 		end
 		
 		
-		if Toggled then
-			-- Background
-			LinreBG = Instance.new("Frame")
-			LinreBG.Name = "lrebg"
-			LinreBG.AnchorPoint = Vector2.new(0.5, 0.5)
-			LinreBG.Position = UDim2.fromScale(0.5, 0.5)
-			LinreBG.Size = UDim2.fromScale(1, 1)
-			LinreBG.BackgroundColor3 = Library.LINREConfiguration.LinReBGColor
-			LinreBG.BackgroundTransparency = Library.LINREConfiguration.LREBGTransparency
-			LinreBG.ZIndex = -10000 -- was -1000, that hid it behind everything
-			LinreBG.Parent = ScreenGui
+		--========================================================
+-- LINRE TOGGLE
+--========================================================
 
-			-- Icon needs to live in workspace, not the camera
-			icon = Instance.new("MeshPart")
-			icon.Name = "icon"
-			icon.Color = Library.AccentColor
-			icon.Transparency = 1
-			icon.Material = Enum.Material.Neon
-			icon.Size = Vector3.new(0.001, 0.001, 0.001)
-			icon.Anchored = true
-			icon.CanCollide = false
-			icon.Massless = true
-			icon.Locked = true
-			icon.MeshId = "rbxassetid://98310035274787"
-			icon.DoubleSided = true
-			icon.Parent = workspace -- was cam, MeshParts don't render parented to Camera
+if Toggled then
 
-			lreconnections.Icon = RunService.RenderStepped:Connect(function()
-				if not Library.LINREConfiguration.LINREIcon then
-					icon.Transparency = 1
-					return
-				end
+	--====================================================
+	-- CLEAN UP ANY EXISTING LINRE
+	--====================================================
 
-				icon.Color = Library.AccentColor
-				icon.Transparency = Library.LINREConfiguration.LREIconTransparency
+	if lreconnections.Icon then
+		lreconnections.Icon:Disconnect()
+		lreconnections.Icon = nil
+	end
 
-				icon.Size = Vector3.new(
-					Library.LINREConfiguration.lreiconsizex,
-					Library.LINREConfiguration.lreiconsizey,
-					Library.LINREConfiguration.LREIconThickness
+	if LinreBG then
+		LinreBG:Destroy()
+		LinreBG = nil
+	end
+
+	if LinreViewport then
+		LinreViewport:Destroy()
+		LinreViewport = nil
+	end
+
+	LinreWorldModel = nil
+	LinreIcon = nil
+	LinreCamera = nil
+
+
+	--====================================================
+	-- CONFIG
+	--====================================================
+
+	local Config = Library.LINREConfiguration
+
+
+	--====================================================
+	-- BACKGROUND
+	--====================================================
+
+	if Config.LinReBackground then
+
+		LinreBG = Instance.new("Frame")
+		LinreBG.Name = "LinReBackground"
+
+		LinreBG.AnchorPoint = Vector2.new(0.5, 0.5)
+		LinreBG.Position = UDim2.fromScale(0.5, 0.5)
+		LinreBG.Size = UDim2.fromScale(1, 1)
+
+		LinreBG.BackgroundColor3 =
+			Config.LinReBGColor
+
+		LinreBG.BackgroundTransparency =
+			Config.LREBGTransparency
+
+		LinreBG.BorderSizePixel = 0
+
+		LinreBG.ZIndex = 1
+
+		LinreBG.Parent = ScreenGui
+
+	end
+
+
+	--====================================================
+	-- VIEWPORT
+	--====================================================
+
+	LinreViewport = Instance.new("ViewportFrame")
+	LinreViewport.Name = "LinReIcon"
+
+	LinreViewport.AnchorPoint =
+		Vector2.new(0.5, 0.5)
+
+	LinreViewport.Position =
+		UDim2.fromScale(0.5, 0.5)
+
+	LinreViewport.Size =
+		UDim2.fromScale(1, 1)
+
+	LinreViewport.BackgroundTransparency = 1
+	LinreViewport.BorderSizePixel = 0
+
+	LinreViewport.ZIndex = 2
+
+	-- Remove unwanted viewport lighting.
+	LinreViewport.Ambient =
+		Color3.fromRGB(255, 255, 255)
+
+	LinreViewport.LightColor =
+		Color3.fromRGB(255, 255, 255)
+
+	LinreViewport.LightDirection =
+		Vector3.new(0, 0, -1)
+
+	LinreViewport.Parent = ScreenGui
+
+
+	--====================================================
+	-- WORLD MODEL
+	--====================================================
+
+	LinreWorldModel = Instance.new("WorldModel")
+	LinreWorldModel.Name = "LinReWorld"
+
+	LinreWorldModel.Parent = LinreViewport
+
+
+	--====================================================
+	-- ACTUAL LINRE MESH
+	--====================================================
+
+	LinreIcon = Instance.new("MeshPart")
+	LinreIcon.Name = "LinReLogo"
+
+	-- YOUR ACTUAL LOGO
+	LinreIcon.MeshId =
+		"rbxassetid://98310035274787"
+
+	LinreIcon.Anchored = true
+
+	LinreIcon.CanCollide = false
+	LinreIcon.CanTouch = false
+	LinreIcon.CanQuery = false
+
+	LinreIcon.CastShadow = false
+	LinreIcon.Locked = true
+
+	LinreIcon.DoubleSided = true
+
+	LinreIcon.Parent = LinreWorldModel
+
+
+	--====================================================
+	-- CAMERA
+	--====================================================
+
+	LinreCamera = Instance.new("Camera")
+	LinreCamera.Name = "LinReCamera"
+
+	LinreCamera.FieldOfView = 20
+
+	LinreCamera.CFrame = CFrame.lookAt(
+		Vector3.new(0, 0, 10),
+		Vector3.new(0, 0, 0)
+	)
+
+	LinreCamera.Parent = LinreViewport
+
+	LinreViewport.CurrentCamera = LinreCamera
+
+
+	--====================================================
+	-- UPDATE FUNCTION
+	--====================================================
+
+	local function UpdateLinRe()
+
+		if not LinreIcon then
+			return
+		end
+
+		if not LinreIcon.Parent then
+			return
+		end
+
+		local Config =
+			Library.LINREConfiguration
+
+
+		--===============================================
+		-- BACKGROUND
+		--===============================================
+
+		if LinreBG then
+
+			LinreBG.Visible =
+				Config.LinReBackground == true
+
+			LinreBG.BackgroundColor3 =
+				Config.LinReBGColor
+
+			LinreBG.BackgroundTransparency =
+				math.clamp(
+					tonumber(Config.LREBGTransparency) or 0,
+					0,
+					1
 				)
 
-				local offset = Vector3.new(0, 0, 5)
-				local worldPos = cam.CFrame:PointToWorldSpace(offset)
-
-				LinreBG.BackgroundColor3 = Library.LINREConfiguration.LinReBGColor
-				LinreBG.BackgroundTransparency = Library.LINREConfiguration.LREBGTransparency
-
-				if Library.LINREConfiguration.LREIconSpin then
-					local speed = Library.LINREConfiguration.LREIconSpinSpeed or 1
-					local direction = Library.LINREConfiguration.LREIconSpinReverse and -1 or 1
-					local angle = tick() * speed * direction
-
-					icon.CFrame = cam.CFrame * CFrame.new(offset) * CFrame.Angles(0, angle, 0)
-				else
-					icon.CFrame = cam.CFrame * CFrame.new(offset)
-				end
-			end)
-
-		else
-			if icon then icon:Destroy() end
-			if LinreBG then LinreBG:Destroy() end
-			if lreconnections.Icon then lreconnections.Icon:Disconnect() end
 		end
+
+
+		--===============================================
+		-- ICON VISIBILITY
+		--===============================================
+
+		if not Config.LinReIconBackground then
+
+			LinreIcon.Transparency = 1
+
+			return
+
+		end
+
+
+		--===============================================
+		-- ICON COLOR
+		--===============================================
+
+		LinreIcon.Color =
+			Config.LREIconColor or Library.AccentColor
+
+
+		--===============================================
+		-- ICON MATERIAL
+		--===============================================
+
+		LinreIcon.Material =
+			Config.LREIconMaterial or Enum.Material.Neon
+
+
+		--===============================================
+		-- ICON TRANSPARENCY
+		--===============================================
+
+		LinreIcon.Transparency =
+			math.clamp(
+				tonumber(Config.LREIconTransparency) or 0,
+				0,
+				1
+			)
+
+
+		--===============================================
+		-- ICON SCALE
+		--===============================================
+
+		local Scale =
+			tonumber(Config.LREIconScale) or 1
+
+		Scale = math.max(Scale, 0.001)
+
+
+		local SizeX =
+			tonumber(Config.lreiconsizex) or 20
+
+		local SizeY =
+			tonumber(Config.lreiconsizey) or 12
+
+		local Thickness =
+			tonumber(Config.LREIconThickness) or 0.1
+
+
+		SizeX = math.max(SizeX, 0.001)
+		SizeY = math.max(SizeY, 0.001)
+		Thickness = math.max(Thickness, 0.001)
+
+
+		LinreIcon.Size = Vector3.new(
+			SizeX * Scale,
+			SizeY * Scale,
+			Thickness * Scale
+		)
+
+
+		--===============================================
+		-- ICON ROTATION
+		--===============================================
+
+		local Rotation =
+			CFrame.identity
+
+
+		if Config.LREIconSpin then
+
+			local Speed =
+				tonumber(Config.LREIconSpinSpeed) or 1
+
+			local Direction = 1
+
+			if Config.LREIconSpinReverse then
+				Direction = -1
+			end
+
+			local Angle =
+				time() * Speed * Direction
+
+			Rotation =
+				CFrame.Angles(
+					0,
+					Angle,
+					0
+				)
+
+		end
+
+
+		--===============================================
+		-- ICON POSITION
+		--===============================================
+
+		LinreIcon.CFrame =
+			CFrame.new(0, 0, 0)
+			* Rotation
+
+	end
+
+
+	--====================================================
+	-- INITIAL UPDATE
+	--====================================================
+
+	UpdateLinRe()
+
+
+	--====================================================
+	-- RENDER LOOP
+	--====================================================
+
+	lreconnections.Icon =
+		RunService.RenderStepped:Connect(function()
+
+			-- If LinRe was destroyed externally,
+			-- stop updating.
+			if not LinreViewport
+				or not LinreViewport.Parent then
+
+				if lreconnections.Icon then
+					lreconnections.Icon:Disconnect()
+					lreconnections.Icon = nil
+				end
+
+				return
+			end
+
+
+			UpdateLinRe()
+
+		end)
+
+
+else
+
+	--====================================================
+	-- DISABLE LINRE
+	--====================================================
+
+	-- Disconnect first.
+	if lreconnections.Icon then
+
+		lreconnections.Icon:Disconnect()
+		lreconnections.Icon = nil
+
+	end
+
+
+	-- Remove background.
+	if LinreBG then
+
+		LinreBG:Destroy()
+		LinreBG = nil
+
+	end
+
+
+	-- Remove the entire viewport.
+	-- This automatically removes:
+	-- WorldModel
+	-- MeshPart
+	-- Camera
+	if LinreViewport then
+
+		LinreViewport:Destroy()
+		LinreViewport = nil
+
+	end
+
+
+	-- Clear references.
+	LinreWorldModel = nil
+	LinreIcon = nil
+	LinreCamera = nil
+
+end
 		
 		if Toggled then
 			-- A bit scuffed, but if we're going from not toggled -> toggled we want to show the frame immediately so that the fade is visible.
