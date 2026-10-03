@@ -9,7 +9,7 @@ local Interface = {
 	ThemeManager = loadstring(game:HttpGet(BaseUrl .. "addons/ThemeManager.lua"))(),
 
 	ApplyInfoTab = loadstring(game:HttpGet("https://raw.githubusercontent.com/00uxnx/linre/main/Components/InfoTab.luau"))(),
-	ApplySettingsTab = loadstring(game:HttpGet(AbysallUrl .. "Components/SettingsTab.luau"))()
+	ApplySettingsTab = loadstring(game:HttpGet("https://raw.githubusercontent.com/00uxnx/linre/main/Components/Components/settings.luau"))()
 }
 
 Interface.ThemeManager.BuiltInThemes = {
